@@ -7,5 +7,15 @@
     "test": "jest"
   },
   "author": "Gonzalo Gluzman <dggluz@gmail.com>",
-  "license": "ISC"
+  "license": "ISC",
+  "dependencies": {
+    "jest": "^27.0.6",
+    "restify": "^8.5.1"
+  },
+  "devDependencies": {
+    "@types/jest": "^26.0.23",
+    "@types/restify": "^8.5.1",
+    "ts-jest": "^27.0.3",
+    "typescript": "^4.3.5"
+  }
 }
