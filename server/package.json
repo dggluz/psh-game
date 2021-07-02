@@ -10,8 +10,10 @@
   "author": "Gonzalo Gluzman <dggluz@gmail.com>",
   "license": "ISC",
   "dependencies": {
+    "error-typed-promise": "^1.0.2",
     "jest": "^27.0.6",
-    "restify": "^8.5.1"
+    "restify": "^8.5.1",
+    "runtypes": "^6.3.0"
   },
   "devDependencies": {
     "@types/jest": "^26.0.23",
