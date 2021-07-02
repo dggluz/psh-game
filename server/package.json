@@ -1,0 +1,11 @@
+{
+  "name": "psh-dev-exam-server",
+  "version": "1.0.0",
+  "description": "",
+  "main": "build/js/index.js",
+  "scripts": {
+    "test": "jest"
+  },
+  "author": "Gonzalo Gluzman <dggluz@gmail.com>",
+  "license": "ISC"
+}
