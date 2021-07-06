@@ -62,23 +62,27 @@ const checkStructure = <T> (check: Runtype<T>) => (x: unknown) =>
     })
 ;
 
-getReq('https://randomuser.me/api')
-    .then(x => x)
-    .then(parseJson)
-    .then(checkStructure(Record({
-        results: Array(Record({
-            name: Record({
-                title: String,
-                first: String,
-                last: String
-            }),
-            picture: Record({
-                large: String,
-                medium: String,
-                thumbnail: String
-            })
-        }))
-    })))
-    .then(x => x, err => _Promise.reject(err))
-    .then(console.log, console.error)
-;
+export const getRandomUsers = (qty: number) => {
+    const url = `https://randomuser.me/api/?results=${qty}`;
+
+    return getReq(url)
+        .then(x => x)
+        .then(parseJson)
+        .then(checkStructure(Record({
+            results: Array(Record({
+                name: Record({
+                    title: String,
+                    first: String,
+                    last: String
+                }),
+                picture: Record({
+                    large: String,
+                    medium: String,
+                    thumbnail: String
+                })
+            }))
+        })))
+        .then(x => x, err => _Promise.reject(err))
+        .then(console.log, console.error)
+    ;
+};
