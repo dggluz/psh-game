@@ -1,0 +1,20 @@
+version: "3.9"
+
+services:
+  db:
+    image: mysql:5.7
+    volumes:
+      - ./db_data:/var/lib/mysql
+    restart: always
+    ports:
+      - 3306:3306
+    environment:
+      MYSQL_ROOT_PASSWORD: root_password
+      MYSQL_DATABASE: psh
+      MYSQL_USER: user
+      MYSQL_PASSWORD: password
+
+  statistics-generator:
+    build: ./statistics-generator
+    depends_on:
+      - db

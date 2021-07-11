@@ -8,7 +8,7 @@ export const connect = () => {
     if (!cnx) {
         cnx = new _Promise<Connection, MysqlError>((resolve, reject) => {
             const connection = createConnection({
-                host: 'localhost',
+                host: 'db',
                 user: 'user',
                 password: 'password',
                 database: 'psh'
