@@ -70,10 +70,8 @@ export const getRandomUsers = (qty: number) => {
         .then(parseJson)
         .then(checkStructure(Record({
             results: Array(Record({
-                name: Record({
-                    title: String,
-                    first: String,
-                    last: String
+                login: Record({
+                    username: String
                 }),
                 picture: Record({
                     large: String,
