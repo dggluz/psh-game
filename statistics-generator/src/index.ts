@@ -1,25 +1,8 @@
 import { endConnection, query } from './db/db';
 import { getRandomUsers } from './random-user';
+import { randomInt } from './utils/random';
 
-const random = (min: number, max: number): number => {
-  if (min === max) {
-    return min;
-  }
-
-  if (max < min) {
-    return random(max, min);
-  }
-
-  return min + Math.random() * (max - min);
-};
-
-const randomInt = (min: number, max: number) =>
-  Math.round(random(min, max))
-;
-
-const randomNumber = randomInt(0, 10);
-
-getRandomUsers(randomNumber)
+getRandomUsers(randomInt(0, 10))
   .then(({results}) => results.map((user): [string, string] => [
     user.login.username,
     user.picture.thumbnail
