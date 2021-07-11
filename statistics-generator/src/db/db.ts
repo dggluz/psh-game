@@ -1,6 +1,6 @@
 import { _Promise } from 'error-typed-promise';
 import { unknownError } from 'error-typed-promise/dist/typings/unknown-error';
-import { Connection, createConnection, FieldInfo, MysqlError } from 'mysql';
+import { Connection, createConnection, FieldInfo, MysqlError, escape } from 'mysql';
 
 let cnx: _Promise<Connection, MysqlError | unknownError> | undefined;
 
@@ -47,7 +47,7 @@ export const query = (sqlQuery: string, values: unknown[] = []) => {
         )
 };
 
-export const end = () => {
+export const endConnection = () => {
     return getConnection()
         .then(cnx =>
             new _Promise<void, MysqlError>((resolve, reject) => {
