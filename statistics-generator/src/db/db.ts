@@ -1,19 +1,9 @@
 import { _Promise } from 'error-typed-promise';
 import { unknownError } from 'error-typed-promise/dist/typings/unknown-error';
 import { Connection, createConnection, FieldInfo, MysqlError } from 'mysql';
-import { getSecret, InexistentSecretError, InvalidSecretNameError } from '../utils/get-secret';
+import { getSecrets, InexistentSecretError, InvalidSecretNameError } from '../utils/get-secret';
 
 let cnx: _Promise<Connection, MysqlError | unknownError | InvalidSecretNameError | InexistentSecretError> | undefined;
-
-const getSecrets = <T extends Record<string, string>> (secrets: T) =>
-    _Promise.all(Object
-        .entries(secrets)
-        .map(([key, secretName]) =>
-            getSecret(secretName)
-                .then((secret) => [key, secret])
-        ))
-        .then(entries => Object.fromEntries(entries) as {[K in keyof T]: string});
-;
 
 export const connect = () => {
     if (!cnx) {

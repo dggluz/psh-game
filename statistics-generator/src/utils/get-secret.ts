@@ -1,56 +1,9 @@
 import { _Promise } from 'error-typed-promise';
-import { unknownError } from 'error-typed-promise/dist/typings/unknown-error';
-import { readFile } from 'fs';
-
-const readStringFile = (path: string) =>
-    new _Promise<string, FileReadError>((resolve, reject) => {
-        readFile(path, {encoding: 'utf-8'}, (err, data) => {
-            if (err) {
-                reject(new FileReadError(err));
-            }
-            else {
-                resolve(data);
-            }
-        })
-    })
-;
-
-export class FileReadError extends Error {
-    tag = Symbol('FileReadError');
-
-    constructor (e: unknown) {
-        super(`${ e }`);
-    }
-}
-
-const caseError = <ExpectedError, ResolvedResult, RejectedResult> (
-        errPredicate: <E> (err: E | ExpectedError) => err is ExpectedError,
-        errHandler: (err: ExpectedError) => _Promise<ResolvedResult, RejectedResult>
-    ) => <CurrentError> (err: CurrentError) => {
-        if (errPredicate(err)) {
-            return errHandler(err);
-        }
-        return _Promise.reject(err as Exclude<CurrentError, ExpectedError>);
-    }
-;
-
-const isInstanceOf = <I> (expectedConstructor: new (...args: any[]) => I) =>
-    (target: unknown): target is I =>
-        target instanceof expectedConstructor
-;
-
-type MergePromises<P extends _Promise<any, any>> = _Promise<
-    P extends _Promise<infer T, any> ? T : unknown,
-    P extends _Promise<any, infer E> ? E : unknownError
->;
-
-const mergePromises = <P extends _Promise<any, any>> (x: P) =>
-    x as MergePromises <P>
-;
-
-const mergePromisesFn = <F extends (...args: any[]) => _Promise<any, any>> (fn: F) =>
-    fn as (...args: Parameters<F>) => MergePromises<ReturnType<F>>
-;
+import { caseError } from './case-error';
+import { isInstanceOf } from './is-instance-of';
+import { makeLit } from './make-lit';
+import { mergePromisesFn } from './merge-promises';
+import { readStringFile, FileReadError } from './read-string-file';
 
 export const getSecret = mergePromisesFn((secretName: string) => {
     if (secretName.includes('.')) {
@@ -67,7 +20,15 @@ export const getSecret = mergePromisesFn((secretName: string) => {
     ;
 });
 
-const makeLit = <T extends string> (x: T) => x;
+export const getSecrets = <T extends Record<string, string>> (secrets: T) =>
+    _Promise.all(Object
+        .entries(secrets)
+        .map(([key, secretName]) =>
+            getSecret(secretName)
+                .then((secret) => [key, secret])
+        ))
+        .then(entries => Object.fromEntries(entries) as {[K in keyof T]: string});
+;
 
 export class InvalidSecretNameError extends Error {
     __brand = makeLit('InvalidSecretNameError')

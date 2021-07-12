@@ -1,8 +1,9 @@
 import { _Promise } from 'error-typed-promise';
 import { Runtype } from 'runtypes';
+import { makeLit } from './make-lit';
 
 export class InvalidStructureError extends Error {
-    tag = Symbol('InvalidStructureError');
+    __brand = makeLit('InvalidStructureError');
 
     constructor (e: unknown) {
         super(`${ e }`);

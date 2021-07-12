@@ -1,5 +1,6 @@
 import { _Promise } from 'error-typed-promise';
 import { get } from 'https';
+import { makeLit } from './make-lit';
 
 export const getReq = (url: string) => {
         return new _Promise<string, RequestError>((resolve, reject) => {
@@ -25,7 +26,7 @@ export const getReq = (url: string) => {
 ;
 
 export class RequestError extends Error {
-    tag = Symbol('RequestError');
+    __brand = makeLit('RequestError');
 
     constructor (e: unknown) {
         super(`${ e }`);
