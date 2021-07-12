@@ -21,6 +21,10 @@ services:
 
   statistics-generator:
     build: ./statistics-generator
+    volumes:
+      - ./cron.log:/var/log/cron.log
+    ports:
+      - 8082:8080
     depends_on:
       - db
     secrets:
@@ -28,7 +32,17 @@ services:
       - db_user
       - db_password
       - db_host
-  
+
+  server:
+    build: ./server
+    depends_on:
+      - db
+    secrets:
+      - db_database
+      - db_user
+      - db_password
+      - db_host
+
 secrets:
   db_root_password:
     file: ./credentials/db/ROOT_PASSWORD
