@@ -1,27 +1,41 @@
 import { _Promise } from 'error-typed-promise';
 import { unknownError } from 'error-typed-promise/dist/typings/unknown-error';
-import { Connection, createConnection, FieldInfo, MysqlError, escape } from 'mysql';
+import { Connection, createConnection, FieldInfo, MysqlError } from 'mysql';
+import { getSecret, InexistentSecretError, InvalidSecretNameError } from '../utils/get-secret';
 
-let cnx: _Promise<Connection, MysqlError | unknownError> | undefined;
+let cnx: _Promise<Connection, MysqlError | unknownError | InvalidSecretNameError | InexistentSecretError> | undefined;
+
+const getSecrets = <T extends Record<string, string>> (secrets: T) =>
+    _Promise.all(Object
+        .entries(secrets)
+        .map(([key, secretName]) =>
+            getSecret(secretName)
+                .then((secret) => [key, secret])
+        ))
+        .then(entries => Object.fromEntries(entries) as {[K in keyof T]: string});
+;
 
 export const connect = () => {
     if (!cnx) {
-        cnx = new _Promise<Connection, MysqlError>((resolve, reject) => {
-            const connection = createConnection({
-                host: 'db',
-                user: 'user',
-                password: 'password',
-                database: 'psh'
-            });
-            connection.connect(err => {
-                if (err) {
-                    reject(err);
-                }
-                else {
-                    resolve(connection);
-                }
-            });
-        });
+        cnx = getSecrets({
+            host: 'db_host',
+            user: 'db_user',
+            password: 'db_password',
+            database: 'db_database'
+        })
+        .then(secrets =>
+            new _Promise<Connection, MysqlError>((resolve, reject) => {
+                const connection = createConnection(secrets);
+                connection.connect(err => {
+                    if (err) {
+                        reject(err);
+                    }
+                    else {
+                        resolve(connection);
+                    }
+                });
+            }))
+        ;
     }
     return cnx;
 };
