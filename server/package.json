@@ -4,7 +4,7 @@
   "description": "",
   "main": "build/js/index.js",
   "scripts": {
-    "build": "rm -rf build && tsc",
+    "build": "rm -rf build && tsc && cp src/*.sql build/js/",
     "test": "jest"
   },
   "author": "Gonzalo Gluzman <dggluz@gmail.com>",
