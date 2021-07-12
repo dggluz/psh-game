@@ -1,6 +1,15 @@
 import { _Promise } from 'error-typed-promise';
-import { Connection, createConnection, FieldInfo, MysqlError } from 'mysql';
+import { Connection, createConnection, FieldInfo } from 'mysql';
 import { getSecrets } from '../utils/get-secret';
+import { makeLit } from '../utils/make-lit';
+
+export class MysqlError extends Error {
+    __brand = makeLit('MysqlError');
+
+    constructor (e: unknown) {
+        super(`${e}`);
+    }
+}
 
 const forceConnect = () =>
     getSecrets({
@@ -14,7 +23,7 @@ const forceConnect = () =>
             const connection = createConnection(secrets);
             connection.connect(err => {
                 if (err) {
-                    reject(err);
+                    reject(new MysqlError(err));
                 }
                 else {
                     resolve(connection);
@@ -41,7 +50,7 @@ export const query = (sqlQuery: string, values: unknown[] = []) => {
             new _Promise<{results: unknown, fields: FieldInfo[] | undefined}, MysqlError>((resolve, reject) => {
                 cnx.query(sqlQuery, values, (err, results, fields) => {
                     if (err) {
-                        reject(err);
+                        reject(new MysqlError(err));
                     }
                     else {
                         resolve({
@@ -60,7 +69,7 @@ export const endConnection = () => {
             new _Promise<void, MysqlError>((resolve, reject) => {
                 cnx.end(err => {
                     if (err) {
-                        reject(err);
+                        reject(new MysqlError(err));
                     }
                     else {
                         resolve(undefined);

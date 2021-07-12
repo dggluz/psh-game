@@ -1,10 +1,17 @@
 import { _Promise } from 'error-typed-promise';
-import { Record, Number, Array } from 'runtypes';
-import { endConnection, query } from './db/db';
+import { endConnection, MysqlError } from './db/db';
+import { getPlayersIds, upsertPlayers } from './db/players';
+import { insertGamesForPlayers } from './db/games';
 import { getRandomUsers } from './random-user';
+import { assertUnknownError } from './utils/assert-unknown-error';
 import { caseError } from './utils/case-error';
+import { InvalidStructureError } from './utils/check-structure';
+import { RequestError } from './utils/get-req';
+import { InexistentSecretError, InvalidSecretNameError } from './utils/get-secret';
+import { ignoreErrors } from './utils/ignore-errors';
 import { isInstanceOf } from './utils/is-instance-of';
 import { makeLit } from './utils/make-lit';
+import { JsonParseError } from './utils/parse-json';
 import { randomInt } from './utils/random';
 
 class ZeroPlayersError extends Error {
@@ -26,41 +33,13 @@ getRandomUsers(randomInt(0, 10))
     user.login.username,
     user.picture.thumbnail
   ]))
-  // Insert players on DB
-  .then(usersData =>
-    query('INSERT IGNORE INTO players (nickname, profile_image) VALUES ? ' +
-      // Avoid inserting and already existing player
-      'ON DUPLICATE KEY UPDATE player_id = player_id;',
-      // Bulk insert needs an array OF an array (rows) with another array (values) inside
-      [usersData])
-      .then(_ => usersData)
-  )
-  // Get players' IDs
-  .then(usersData =>
-    query('SELECT player_id FROM players WHERE nickname IN (?);', [usersData.map(user => user[0])])
-  )
-  .then(({ results }) =>
-    Array(
-      Record({
-        player_id: Number
-      })
-    ).check(results)
-  )
-  // Insert games into DB
-  .then(playerIds =>
-    query('INSERT INTO games (player_id, creation_date, score) VALUES ?;', [
-      playerIds.map(({ player_id }) => [
-        player_id,
-        new Date(),
-        randomInt(0, 100)
-      ])
-    ])
-  )
-  .then(({ results }) =>
-    Record({
-      affectedRows: Number
-    }).check(results)
-  )
+
+  // Insert players and games on the DB
+  .then(upsertPlayers)
+  .then(getPlayersIds)
+  .then(insertGamesForPlayers)
+
+  // Log results
   .then(({ affectedRows }) =>
     console.log(`Added ${ affectedRows} games to DB.`)
   )
@@ -71,6 +50,13 @@ getRandomUsers(randomInt(0, 10))
       return _Promise.resolve(null)
     }
   ))
+
+  // Ensure no error has been forgotten
+  .catch(err => _Promise.reject(err))
+  .catch(ignoreErrors([InvalidStructureError, InvalidSecretNameError, InexistentSecretError, RequestError, MysqlError, JsonParseError]))
+  .catch(err => assertUnknownError(err))
+
+  // Close connection
   .catch(console.error)
   .finally(endConnection)
 ;
