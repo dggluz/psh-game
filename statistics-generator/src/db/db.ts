@@ -1,31 +1,34 @@
 import { _Promise } from 'error-typed-promise';
-import { unknownError } from 'error-typed-promise/dist/typings/unknown-error';
 import { Connection, createConnection, FieldInfo, MysqlError } from 'mysql';
-import { getSecrets, InexistentSecretError, InvalidSecretNameError } from '../utils/get-secret';
+import { getSecrets } from '../utils/get-secret';
 
-let cnx: _Promise<Connection, MysqlError | unknownError | InvalidSecretNameError | InexistentSecretError> | undefined;
+const forceConnect = () =>
+    getSecrets({
+        host: 'db_host',
+        user: 'db_user',
+        password: 'db_password',
+        database: 'db_database'
+    })
+    .then(secrets =>
+        new _Promise<Connection, MysqlError>((resolve, reject) => {
+            const connection = createConnection(secrets);
+            connection.connect(err => {
+                if (err) {
+                    reject(err);
+                }
+                else {
+                    resolve(connection);
+                }
+            });
+        })
+    )
+;
+
+let cnx: ReturnType<typeof forceConnect> | undefined;
 
 export const connect = () => {
     if (!cnx) {
-        cnx = getSecrets({
-            host: 'db_host',
-            user: 'db_user',
-            password: 'db_password',
-            database: 'db_database'
-        })
-        .then(secrets =>
-            new _Promise<Connection, MysqlError>((resolve, reject) => {
-                const connection = createConnection(secrets);
-                connection.connect(err => {
-                    if (err) {
-                        reject(err);
-                    }
-                    else {
-                        resolve(connection);
-                    }
-                });
-            }))
-        ;
+        cnx = forceConnect();
     }
     return cnx;
 };
